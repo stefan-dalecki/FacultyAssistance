@@ -9,7 +9,13 @@ from tensorflow.keras import layers
 class Data:
     """Read in survey data"""
 
-    def __init__(self, survey, key):
+    def __init__(self, survey: pd.DataFrame, key: pd.DataFrame) -> None:
+        """Initialize data object
+
+        Args:
+            survey (pd.DataFrame): survey data responses
+            key (pd.DataFrame): response answer key
+        """
         self.survey = pd.read_excel(survey).dropna().reset_index(drop=True)
         self.key = pd.read_excel(key)
         self.data = None
@@ -19,14 +25,14 @@ class Data:
         self.raw_test_data = None
         self.raw_test_labels = None
 
-    def identify(self):
+    def identify(self) -> None:
         """Identify labels and questions in survey"""
         self.data = self.survey.iloc[:, 1:]
         self.labels = self.survey.iloc[:, 0]
         assert len(self.data) == len(self.labels)
         return self
 
-    def separate_data(self):
+    def separate_data(self) -> None:
         """Separate data categories"""
         split = int(len(self.data) / 2)
         self.raw_train_data = self.data.iloc[:split, :].reset_index(drop=True)
@@ -39,7 +45,7 @@ class Data:
 class Pipeline:
     """The machine learning pipeline"""
 
-    def __init__(self, raw_file):
+    def __init__(self, raw_file: Data) -> None:
         self.raw = raw_file
         self.train_data = self.vectorize(self.raw.raw_train_data)
         self.train_labels = np.asarray(self.raw.raw_train_labels).astype("float32")
@@ -48,7 +54,7 @@ class Pipeline:
         self.model = None
         self.history = None
 
-    def vectorize(self, raw_data):
+    def vectorize(self, raw_data: pd.DataFrame) -> np.array:
         """Transform survey responses into vectors"""
         tensor = np.zeros((len(raw_data), len(self.raw.key)))
         cols = list(raw_data.columns)
@@ -61,7 +67,7 @@ class Pipeline:
         return tensor
 
     @staticmethod
-    def binarize(df, question_id: str, response_id: str):
+    def binarize(df: pd.DataFrame, question_id: str, response_id: str) -> int:
         """Convert answers to binary response
 
         Args:
@@ -76,7 +82,7 @@ class Pipeline:
         index = row[row["Response_ID"] == response_id].index[0]
         return index
 
-    def set_layers(self):
+    def set_layers(self) -> None:
         """Establish model layers"""
         self.model = keras.Sequential(
             [
@@ -88,7 +94,7 @@ class Pipeline:
         print("layers set")
         return self
 
-    def compile_model(self):
+    def compile_model(self) -> None:
         """Compile model"""
         assert self.model, "No modile to compile"
         self.model.compile(
@@ -97,7 +103,7 @@ class Pipeline:
         print("compiled")
         return self
 
-    def fit_data(self):
+    def fit_data(self) -> None:
         """Fit data to model"""
         test_split = int(len(self.test_data) / 2)
 
